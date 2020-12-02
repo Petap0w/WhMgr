@@ -13,7 +13,7 @@
         #region Singleton
 
         private static Translator _instance;
-        
+
         public static Translator Instance
         {
             get
@@ -63,12 +63,29 @@
             return Translate($"poke_{pokeId}");
         }
 
+        public string GetPokemonNameEng(int pokeId)
+        {
+            return Translate($"eng_poke_{pokeId}");
+        }
+
         public string GetFormName(int formId)
         {
             if (formId == 0)
                 return null;
 
             var form = Translate("form_" + formId);
+            // TODO: Localize
+            if (string.Compare(form, "Normal", true) == 0)
+                return string.Empty;
+            return form;
+        }
+
+        public string GetFormNameEng(int formId)
+        {
+            if (formId == 0)
+                return null;
+
+            var form = Translate("eng_form_" + formId);
             // TODO: Localize
             if (string.Compare(form, "Normal", true) == 0)
                 return string.Empty;
@@ -99,6 +116,14 @@
                 return "Unknown"; // TODO: Localize
 
             return Translate($"move_{moveId}");
+        }
+
+        public string GetMoveNameEng(int moveId)
+        {
+            if (moveId == 0)
+                return "Unknown"; // TODO: Localize
+
+            return Translate($"eng_move_{moveId}");
         }
 
         public string GetThrowName(ActivityType throwTypeId)

@@ -135,7 +135,9 @@
                     wc.Headers.Add("User-Agent", Strings.BotName);
                     var json = wc.DownloadString(url);
                     dynamic obj = JsonConvert.DeserializeObject(json);
-                    return new Location(Convert.ToString(obj.display_name), city ?? unknown, Convert.ToDouble(obj.lat), Convert.ToDouble(obj.lon));
+//                    return new Location(Convert.ToString(obj.display_name), city ?? unknown, Convert.ToDouble(obj.lat), Convert.ToDouble(obj.lon));
+                    var address_formatted = String.IsNullOrEmpty(Convert.ToString(obj.address.road)) ? Convert.ToString(obj.address.postcode) + " " + Convert.ToString(obj.address.village) + Convert.ToString(obj.address.town) + Convert.ToString(obj.address.city) : Convert.ToString(obj.address.house_number) + " " + Convert.ToString(obj.address.road) + " - " + Convert.ToString(obj.address.postcode) + " " + Convert.ToString(obj.address.village) + Convert.ToString(obj.address.town) + Convert.ToString(obj.address.city);
+                    return new Location(address_formatted, city ?? unknown, Convert.ToDouble(obj.lat), Convert.ToDouble(obj.lon));
                 }
             }
             catch (Exception ex)

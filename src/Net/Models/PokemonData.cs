@@ -422,14 +422,15 @@
                 ImageUrl = DynamicReplacementEngine.ReplaceText(alert.ImageUrl, properties),
                 ThumbnailUrl = DynamicReplacementEngine.ReplaceText(alert.IconUrl, properties),
                 Description = DynamicReplacementEngine.ReplaceText(alert.Content, properties),
-                Color = MatchesGreatLeague || MatchesUltraLeague
-                    ? GetPvPColor(GreatLeague, UltraLeague, server)
-                    : IV.BuildPokemonIVColor(server),
-                Footer = new DiscordEmbedBuilder.EmbedFooter
-                {
-                    Text = DynamicReplacementEngine.ReplaceText(alert.Footer?.Text ?? client.Guilds[guildId]?.Name ?? DateTime.Now.ToString(), properties),
-                    IconUrl = DynamicReplacementEngine.ReplaceText(alert.Footer?.IconUrl ?? client.Guilds[guildId]?.IconUrl ?? string.Empty, properties)
-                }
+                Color = IV.BuildPokemonIVColor(server),
+//                Color = MatchesGreatLeague || MatchesUltraLeague
+//                    ? GetPvPColor(GreatLeague, UltraLeague, server)
+//                    : IV.BuildPokemonIVColor(server),
+//                Footer = new DiscordEmbedBuilder.EmbedFooter
+//                {
+//                    Text = DynamicReplacementEngine.ReplaceText(alert.Footer?.Text ?? client.Guilds[guildId]?.Name ?? DateTime.Now.ToString(), properties),
+//                    IconUrl = DynamicReplacementEngine.ReplaceText(alert.Footer?.IconUrl ?? client.Guilds[guildId]?.IconUrl ?? string.Empty, properties)
+//                }
             };
             var username = DynamicReplacementEngine.ReplaceText(alert.Username, properties);
             var iconUrl = DynamicReplacementEngine.ReplaceText(alert.AvatarUrl, properties);
@@ -461,7 +462,9 @@
         {
             var pkmnInfo = MasterFile.GetPokemon(Id, FormId);
             var pkmnName = Translator.Instance.GetPokemonName(Id);
+            var pkmnNameEng = Translator.Instance.GetPokemonNameEng(Id);
             var form = Translator.Instance.GetFormName(FormId);
+            var formEng = Translator.Instance.GetFormNameEng(FormId);
             var costume = Translator.Instance.GetCostumeName(Costume);
             var gender = Gender.GetPokemonGenderIcon();
             var genderEmoji = Gender.GetGenderEmojiIcon();
@@ -476,8 +479,10 @@
                     ? (Weather ?? WeatherType.None).GetWeatherEmojiIcon()
                     : string.Empty
                 : MasterFile.Instance.CustomEmojis[weatherKey];
-            var move1 = int.TryParse(FastMove, out var fastMoveId) ? Translator.Instance.GetMoveName(fastMoveId) : "Unknown";
-            var move2 = int.TryParse(ChargeMove, out var chargeMoveId) ? Translator.Instance.GetMoveName(chargeMoveId) : "Unknown";
+            var move1 = int.TryParse(FastMove, out var fastMoveId) ? Translator.Instance.GetMoveName(fastMoveId) : "Inconnu";
+            var move2 = int.TryParse(ChargeMove, out var chargeMoveId) ? Translator.Instance.GetMoveName(chargeMoveId) : "Inconnu";
+            var move1Eng = int.TryParse(FastMove, out fastMoveId) ? Translator.Instance.GetMoveNameEng(fastMoveId) : "Unknown";
+            var move2Eng = int.TryParse(ChargeMove, out chargeMoveId) ? Translator.Instance.GetMoveNameEng(chargeMoveId) : "Unknown";
             var type1 = pkmnInfo?.Types?[0];
             var type2 = pkmnInfo?.Types?.Count > 1 ? pkmnInfo.Types?[1] : PokemonType.None;
             var type1Emoji = pkmnInfo?.Types?[0].GetTypeEmojiIcons();
@@ -505,6 +510,11 @@
             var greatLeagueEmoji = PvPLeague.Great.GetLeagueEmojiIcon();
             var ultraLeagueEmoji = PvPLeague.Ultra.GetLeagueEmojiIcon();
             var pvpStats = await GetPvP();
+            var pvpGreatLeagueStats = await GetGreatLeaguePvP();
+            var pvpUltraLeagueStats = await GetUltraLeaguePvP();
+            var pvpStatsEng = await GetPvPEng();
+            var pvpGreatLeagueStatsEng = await GetGreatLeaguePvPEng();
+            var pvpUltraLeagueStatsEng = await GetUltraLeaguePvPEng();
 
             const string defaultMissingValue = "?";
             var dict = new Dictionary<string, string>
@@ -513,8 +523,10 @@
                 { "pkmn_id", Convert.ToString(Id) },
                 { "pkmn_id_3", Id.ToString("D3") },
                 { "pkmn_name", pkmnName },
+                { "pkmn_name_eng", pkmnNameEng },
                 { "pkmn_img_url", properties.ImageUrl },
                 { "form", form },
+                { "form_eng", formEng },
                 { "form_id", Convert.ToString(FormId) },
                 { "form_id_3", FormId.ToString("D3") },
                 { "costume", costume ?? defaultMissingValue },
@@ -527,6 +539,8 @@
                 { "size", size ?? defaultMissingValue },
                 { "move_1", move1 ?? defaultMissingValue },
                 { "move_2", move2 ?? defaultMissingValue },
+                { "move_1_eng", move1Eng ?? defaultMissingValue },
+                { "move_2_eng", move2Eng ?? defaultMissingValue },
                 { "moveset", $"{move1}/{move2}" },
                 { "type_1", type1?.ToString() ?? defaultMissingValue },
                 { "type_2", type2?.ToString() ?? defaultMissingValue },
@@ -559,6 +573,11 @@
                 { "great_league_emoji", greatLeagueEmoji },
                 { "ultra_league_emoji", ultraLeagueEmoji },
                 { "pvp_stats", pvpStats },
+                { "pvp_greatstats", pvpGreatLeagueStats },
+                { "pvp_ultrastats", pvpUltraLeagueStats },
+                { "pvp_stats_eng", pvpStatsEng },
+                { "pvp_greatstats_eng", pvpGreatLeagueStatsEng },
+                { "pvp_ultrastats_eng", pvpUltraLeagueStatsEng },
 
                 // Other properties
                 { "height", height ?? defaultMissingValue },
@@ -581,6 +600,8 @@
                 { "despawn_time_verified", DisappearTimeVerified ? "" : "~" },
                 { "is_despawn_time_verified", Convert.ToString(DisappearTimeVerified) },
                 { "time_left", SecondsLeft.ToReadableString(true) ?? defaultMissingValue },
+                { "time_left_perso", SecondsLeft.ToReadableString(true).Replace(",", "") ?? defaultMissingValue },
+                { "despawn_time_perso", DespawnTime.ToString("HH")+"h"+DespawnTime.ToString("mm")+"m"+DespawnTime.ToString("ss")+"s" },
 
                 // Location properties
                 { "geofence", properties.City ?? defaultMissingValue },
@@ -645,6 +666,26 @@
             return null;
         }
 
+        private async Task<string> GetGreatLeaguePvP()
+        {
+            var great = await GetGreatLeague();
+            if (!string.IsNullOrEmpty(great))
+            {
+                return await Task.FromResult(great);
+            }
+            return null;
+        }
+
+        private async Task<string> GetUltraLeaguePvP()
+        {
+            var ultra = await GetUltraLeague();
+            if (!string.IsNullOrEmpty(ultra))
+            {
+                return await Task.FromResult(ultra);
+            }
+            return null;
+        }
+
         private async Task<string> GetGreatLeague()
         {
             var sb = new StringBuilder();
@@ -670,7 +711,8 @@
                     var pkmnName = string.IsNullOrEmpty(form) ? name : $"{name} ({form})"; // TODO: Localize `Normal` text
                     if ((pvp.Rank.HasValue && pvp.Rank.Value <= MaximumRankPVP) && pvp.Percentage.HasValue && pvp.Level.HasValue && pvp.CP.HasValue && pvp.CP <= Strings.MaximumGreatLeagueCP)
                     {
-                        sb.AppendLine($"{rankText} #{pvp.Rank.Value} {pkmnName} {pvp.CP.Value}{cpText} @ L{pvp.Level.Value} {Math.Round(pvp.Percentage.Value * 100, 2)}%");
+//                        sb.AppendLine($"{rankText} #{pvp.Rank.Value} {pkmnName} {pvp.CP.Value}{cpText} @ L{pvp.Level.Value} {Math.Round(pvp.Percentage.Value * 100, 2)}%");
+                        sb.AppendLine($"- {pkmnName} #{pvp.Rank.Value}  @{pvp.CP.Value}{cpText} (Niv. {pvp.Level.Value})");
                     }
                 }
             }
@@ -679,7 +721,8 @@
             {
                 var greatLeagueText = Translator.Instance.Translate("PVP_GREAT_LEAGUE");
                 var greatLeagueEmoji = PvPLeague.Great.GetLeagueEmojiIcon();
-                result = greatLeagueEmoji + $" **{greatLeagueText}:**\r\n" + result;
+//                result = greatLeagueEmoji + $" **{greatLeagueText}:**\r\n" + result;
+                result = $"**{greatLeagueText}:**\r\n" + result;
             }
             return await Task.FromResult(result);
         }
@@ -709,7 +752,8 @@
                     var pkmnName = string.IsNullOrEmpty(form) ? name : $"{name} ({form})"; // TODO: Localize `Normal` text
                     if ((pvp.Rank.HasValue && pvp.Rank.Value <= MaximumRankPVP) && pvp.Percentage.HasValue && pvp.Level.HasValue && pvp.CP.HasValue && pvp.CP <= Strings.MaximumUltraLeagueCP)
                     {
-                        sb.AppendLine($"{rankText} #{pvp.Rank.Value} {pkmnName} {pvp.CP.Value}{cpText} @ L{pvp.Level.Value} {Math.Round(pvp.Percentage.Value * 100, 2)}%");
+//                        sb.AppendLine($"{rankText} #{pvp.Rank.Value} {pkmnName} {pvp.CP.Value}{cpText} @ L{pvp.Level.Value} {Math.Round(pvp.Percentage.Value * 100, 2)}%");
+                        sb.AppendLine($"- {pkmnName} #{pvp.Rank.Value}  @{pvp.CP.Value}{cpText} (Niv. {pvp.Level.Value})");
                     }
                 }
             }
@@ -718,7 +762,122 @@
             {
                 var ultraLeagueText = Translator.Instance.Translate("PVP_ULTRA_LEAGUE");
                 var ultraLeagueEmoji = PvPLeague.Ultra.GetLeagueEmojiIcon();
-                result = ultraLeagueEmoji + $" **{ultraLeagueText}:**\r\n" + result;
+//                result = ultraLeagueEmoji + $" **{ultraLeagueText}:**\r\n" + result;
+                result = $"**{ultraLeagueText}:**\r\n" + result;
+            }
+            return await Task.FromResult(result);
+        }
+
+        private async Task<string> GetPvPEng()
+        {
+            var great = await GetGreatLeagueEng();
+            var ultra = await GetUltraLeagueEng();
+            if (!string.IsNullOrEmpty(great) || !string.IsNullOrEmpty(ultra))
+            {
+                var header = "__**PvP Rank Statistics**__\r\n";
+                return await Task.FromResult(header + great + ultra);
+            }
+            return null;
+        }
+
+        private async Task<string> GetGreatLeaguePvPEng()
+        {
+            var great = await GetGreatLeagueEng();
+            if (!string.IsNullOrEmpty(great))
+            {
+                return await Task.FromResult(great);
+            }
+            return null;
+        }
+
+        private async Task<string> GetUltraLeaguePvPEng()
+        {
+            var ultra = await GetUltraLeagueEng();
+            if (!string.IsNullOrEmpty(ultra))
+            {
+                return await Task.FromResult(ultra);
+            }
+            return null;
+        }
+
+        private async Task<string> GetGreatLeagueEng()
+        {
+            var sb = new StringBuilder();
+            if (GreatLeague != null)
+            {
+                var rankText = Translator.Instance.Translate("PVP_RANK_ENG");
+                var cpText = Translator.Instance.Translate("PVP_CP_ENGEng");
+                for (var i = 0; i < GreatLeague.Count; i++)
+                {
+                    var pvp = GreatLeague[i];
+                    var withinCpRange = pvp.CP >= Strings.MinimumGreatLeagueCP && pvp.CP <= Strings.MaximumGreatLeagueCP;
+                    var withinRankRange = pvp.Rank <= MaximumRankPVP;
+                    if (pvp.Rank == 0 || (!withinCpRange && !withinRankRange))
+                        continue;
+
+                    if (!MasterFile.Instance.Pokedex.ContainsKey(pvp.PokemonId))
+                    {
+                        _logger.Error($"Pokemon database doesn't contain pokemon id {pvp.PokemonId}");
+                        continue;
+                    }
+                    var name = Translator.Instance.GetPokemonNameEng(pvp.PokemonId);
+                    var form = Translator.Instance.GetFormNameEng(pvp.FormId);
+                    var pkmnName = string.IsNullOrEmpty(form) ? name : $"{name} ({form})"; // TODO: Localize `Normal` text
+                    if ((pvp.Rank.HasValue && pvp.Rank.Value <= MaximumRankPVP) && pvp.Percentage.HasValue && pvp.Level.HasValue && pvp.CP.HasValue && pvp.CP <= Strings.MaximumGreatLeagueCP)
+                    {
+//                        sb.AppendLine($"{rankText} #{pvp.Rank.Value} {pkmnName} {pvp.CP.Value}{cpText} @ L{pvp.Level.Value} {Math.Round(pvp.Percentage.Value * 100, 2)}%");
+                        sb.AppendLine($"- {pkmnName} #{pvp.Rank.Value}  @{pvp.CP.Value}{cpText} (Lev. {pvp.Level.Value})");
+                    }
+                }
+            }
+            var result = sb.ToString();
+            if (!string.IsNullOrEmpty(result))
+            {
+                var greatLeagueText = Translator.Instance.Translate("PVP_GREAT_LEAGUE_ENG");
+                var greatLeagueEmoji = PvPLeague.Great.GetLeagueEmojiIcon();
+//                result = greatLeagueEmoji + $" **{greatLeagueText}:**\r\n" + result;
+                result = $"**{greatLeagueText}:**\r\n" + result;
+            }
+            return await Task.FromResult(result);
+        }
+
+        private async Task<string> GetUltraLeagueEng()
+        {
+            var sb = new StringBuilder();
+            if (UltraLeague != null)
+            {
+                var rankText = Translator.Instance.Translate("PVP_RANK_ENG");
+                var cpText = Translator.Instance.Translate("PVP_CP_ENG");
+                for (var i = 0; i < UltraLeague.Count; i++)
+                {
+                    var pvp = UltraLeague[i];
+                    var withinCpRange = pvp.CP >= Strings.MinimumUltraLeagueCP && pvp.CP <= Strings.MaximumUltraLeagueCP;
+                    var withinRankRange = pvp.Rank <= MaximumRankPVP;
+                    if (pvp.Rank == 0 || (!withinCpRange && !withinRankRange))
+                        continue;
+
+                    if (!MasterFile.Instance.Pokedex.ContainsKey(pvp.PokemonId))
+                    {
+                        _logger.Warn($"Pokemon database doesn't contain pokemon id {pvp.PokemonId}");
+                        continue;
+                    }
+                    var name = Translator.Instance.GetPokemonNameEng(pvp.PokemonId);
+                    var form = Translator.Instance.GetFormNameEng(pvp.FormId);
+                    var pkmnName = string.IsNullOrEmpty(form) ? name : $"{name} ({form})"; // TODO: Localize `Normal` text
+                    if ((pvp.Rank.HasValue && pvp.Rank.Value <= MaximumRankPVP) && pvp.Percentage.HasValue && pvp.Level.HasValue && pvp.CP.HasValue && pvp.CP <= Strings.MaximumUltraLeagueCP)
+                    {
+//                        sb.AppendLine($"{rankText} #{pvp.Rank.Value} {pkmnName} {pvp.CP.Value}{cpText} @ L{pvp.Level.Value} {Math.Round(pvp.Percentage.Value * 100, 2)}%");
+                        sb.AppendLine($"- {pkmnName} #{pvp.Rank.Value}  @{pvp.CP.Value}{cpText} (Lev. {pvp.Level.Value})");
+                    }
+                }
+            }
+            var result = sb.ToString();
+            if (!string.IsNullOrEmpty(result))
+            {
+                var ultraLeagueText = Translator.Instance.Translate("PVP_ULTRA_LEAGUE_ENG");
+                var ultraLeagueEmoji = PvPLeague.Ultra.GetLeagueEmojiIcon();
+//                result = ultraLeagueEmoji + $" **{ultraLeagueText}:**\r\n" + result;
+                result = $"**{ultraLeagueText}:**\r\n" + result;
             }
             return await Task.FromResult(result);
         }

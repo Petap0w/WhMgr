@@ -164,12 +164,16 @@
                 ImageUrl = DynamicReplacementEngine.ReplaceText(alert.ImageUrl, properties),
                 ThumbnailUrl = DynamicReplacementEngine.ReplaceText(alert.IconUrl, properties),
                 Description = DynamicReplacementEngine.ReplaceText(alert.Content, properties),
-                Color = (IsExEligible ? 0 /*ex*/ : int.Parse(Level)).BuildRaidColor(server),
-                Footer = new DiscordEmbedBuilder.EmbedFooter
-                {
-                    Text = DynamicReplacementEngine.ReplaceText(alert.Footer?.Text ?? client.Guilds[guildId]?.Name ?? DateTime.Now.ToString(), properties),
-                    IconUrl = DynamicReplacementEngine.ReplaceText(alert.Footer?.IconUrl ?? client.Guilds[guildId]?.IconUrl ?? string.Empty, properties)
-                }
+//                Color = (IsExEligible ? 0 /*ex*/ : int.Parse(Level)).BuildRaidColor(server),
+                Color = Team == PokemonTeam.Mystic ? DiscordColor.Blue :
+                        Team == PokemonTeam.Valor ? DiscordColor.Red :
+                        Team == PokemonTeam.Instinct ? DiscordColor.Yellow :
+                        DiscordColor.LightGray,
+//                Footer = new DiscordEmbedBuilder.EmbedFooter
+//                {
+//                    Text = DynamicReplacementEngine.ReplaceText(alert.Footer?.Text ?? client.Guilds[guildId]?.Name ?? DateTime.Now.ToString(), properties),
+//                    IconUrl = DynamicReplacementEngine.ReplaceText(alert.Footer?.IconUrl ?? client.Guilds[guildId]?.IconUrl ?? string.Empty, properties)
+//                }
             };
             var username = DynamicReplacementEngine.ReplaceText(alert.Username, properties);
             var iconUrl = DynamicReplacementEngine.ReplaceText(alert.AvatarUrl, properties);
@@ -267,6 +271,10 @@
                 { "end_time", EndTime.ToLongTimeString() },
                 { "end_time_24h", EndTime.ToString("HH:mm:ss") },
                 { "end_time_left", endTimeLeft },
+                { "start_time_24h_perso", StartTime.ToString("HH")+"h"+StartTime.ToString("mm") },
+                { "start_time_left_perso", DateTime.Now.GetTimeRemaining(StartTime).ToReadableStringNoSeconds().Replace(",", "") },
+                { "end_time_24h_perso", EndTime.ToString("HH")+"h"+EndTime.ToString("mm") },
+                { "end_time_left_perso", endTimeLeft.Replace(",", "") },
 
                 //Location properties
                 { "geofence", city ?? defaultMissingValue },

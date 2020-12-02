@@ -33,11 +33,11 @@
     "types_steel": "",
     "types_water": "",
     "weather_0": "",
-    "weather_1": "",
-    "weather_2": "",
-    "weather_3": "",
-    "weather_4": "",
-    "weather_5": "",
-    "weather_6": "",
-    "weather_7": ""
+    "weather_1": ":sunny:️",
+    "weather_2": ":cloud_rain:",
+    "weather_3": ":white_sun_small_cloud:",
+    "weather_4": ":cloud:",
+    "weather_5": ":leaves:",
+    "weather_6": ":snowflake:️",
+    "weather_7": ":foggy:"
 }
